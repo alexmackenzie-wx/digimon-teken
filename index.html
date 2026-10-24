@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Digi Smash</title>
+  <meta name="description" content="A Smash-style platform fighter starring Digimon. Play against the CPU, on one keyboard, or online with a friend via a link.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦖</text></svg>">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="ui">
+    <!-- TITLE -->
+    <section id="scr-title" class="screen">
+      <div class="logo">
+        <div class="logo-main">DIGI<span>SMASH</span></div>
+        <div class="logo-sub">Digimon Battle Royale</div>
+      </div>
+      <div class="menu">
+        <button class="btn big primary" data-act="online">🌐 Play Online</button>
+        <button class="btn big" data-act="cpu">🤖 Vs CPU</button>
+        <button class="btn big" data-act="local">🎮 Local 2 Player</button>
+        <button class="btn" data-act="help">❓ How to Play</button>
+      </div>
+      <p class="hint">Online: host a room and send the link to a friend. No accounts, no installs.</p>
+    </section>
+
+    <!-- ONLINE LOBBY -->
+    <section id="scr-online" class="screen">
+      <h2 id="online-title">Online Battle</h2>
+      <div class="panel">
+        <p id="online-status">Creating room…</p>
+        <div id="online-link-box" class="hidden">
+          <p>Send this link to your opponent:</p>
+          <div class="linkrow">
+            <input id="online-link" readonly>
+            <button class="btn" id="btn-copy">Copy</button>
+            <button class="btn hidden" id="btn-share">Share</button>
+          </div>
+          <p class="hint">Waiting for them to join… <span class="spinner"></span></p>
+        </div>
+      </div>
+      <div class="row"><button class="btn" data-act="leave">Back</button></div>
+    </section>
+
+    <!-- CHARACTER SELECT -->
+    <section id="scr-select" class="screen">
+      <h2 id="select-title">Choose your Digimon</h2>
+      <div id="char-grid" class="grid"></div>
+      <div id="pick-bar" class="pickbar"></div>
+      <div class="row">
+        <button class="btn" data-act="select-back">Back</button>
+        <button class="btn primary" id="btn-select-next" data-act="select-next" disabled>Next ▶</button>
+      </div>
+    </section>
+
+    <!-- STAGE / RULES -->
+    <section id="scr-stage" class="screen">
+      <h2>Choose a Stage</h2>
+      <div id="stage-grid" class="grid stages"></div>
+      <div class="options">
+        <label>Stocks
+          <select id="opt-stocks"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+        </label>
+        <label>Items
+          <select id="opt-items"><option value="1" selected>On</option><option value="0">Off</option></select>
+        </label>
+        <label id="opt-cpu-wrap">CPU Level
+          <select id="opt-cpu"><option value="0">Rookie</option><option value="1">Champion</option><option value="2" selected>Ultimate</option><option value="3">Mega</option></select>
+        </label>
+      </div>
+      <p id="stage-wait" class="hint hidden"></p>
+      <div class="row">
+        <button class="btn" data-act="stage-back">◀ Back</button>
+        <button class="btn primary big" id="btn-fight" data-act="fight">FIGHT!</button>
+      </div>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section id="scr-help" class="screen scroll">
+      <h2>How to Play</h2>
+      <div class="help">
+        <div class="panel">
+          <h3>The goal</h3>
+          <p>Hits raise your opponent's <b>damage %</b>. The higher it is, the further they fly. Knock them past the edge of the screen to take a stock. Last Digimon standing wins!</p>
+          <h3>Digivolve!</h3>
+          <p>Dealing and taking damage fills your <b>DIGI meter</b>. When it flashes, press <b>Digivolve</b> to evolve into your Champion form for 15 seconds: bigger, stronger, with brand new special moves.</p>
+          <p class="chars">Agumon → Greymon · Gabumon → Garurumon · Patamon → Angemon · Guilmon → Growlmon</p>
+          <h3>Items</h3>
+          <p>🍖 <b>Digi-Meat</b> heals 25%. 💠 <b>Data Chips</b> fill your DIGI meter (or extend your Champion time).</p>
+        </div>
+        <div class="panel">
+          <h3>Keyboard: Online / Vs CPU</h3>
+          <table>
+            <tr><td>Move</td><td><kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd></td></tr>
+            <tr><td>Jump</td><td><kbd>Space</kbd>, <kbd>W</kbd> or <kbd>↑</kbd> (press in the air to double jump)</td></tr>
+            <tr><td>Attack</td><td><kbd>J</kbd> or <kbd>Z</kbd></td></tr>
+            <tr><td>Special</td><td><kbd>K</kbd> or <kbd>X</kbd></td></tr>
+            <tr><td>Shield / Dodge</td><td><kbd>L</kbd>, <kbd>C</kbd> or <kbd>Shift</kbd></td></tr>
+            <tr><td>Digivolve</td><td><kbd>I</kbd> or <kbd>V</kbd></td></tr>
+            <tr><td>Pause</td><td><kbd>Esc</kbd></td></tr>
+          </table>
+          <h3>Keyboard: Local 2 Player</h3>
+          <table>
+            <tr><th></th><th>Player 1</th><th>Player 2</th></tr>
+            <tr><td>Move</td><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>Arrow keys</td></tr>
+            <tr><td>Jump</td><td><kbd>W</kbd> / <kbd>Space</kbd></td><td><kbd>↑</kbd></td></tr>
+            <tr><td>Attack</td><td><kbd>F</kbd></td><td><kbd>.</kbd> / Num 1</td></tr>
+            <tr><td>Special</td><td><kbd>G</kbd></td><td><kbd>/</kbd> / Num 2</td></tr>
+            <tr><td>Shield</td><td><kbd>H</kbd></td><td><kbd>Right Shift</kbd> / Num 3</td></tr>
+            <tr><td>Digivolve</td><td><kbd>T</kbd></td><td><kbd>Enter</kbd> / Num 0</td></tr>
+          </table>
+          <h3>Gamepad</h3>
+          <p>Stick/D-pad move · <b>A</b> attack · <b>B</b> special · <b>X/Y</b> jump · <b>RB/Triggers</b> shield · <b>LB</b> digivolve · <b>Right stick</b> smash attacks</p>
+        </div>
+        <div class="panel">
+          <h3>Moves</h3>
+          <table>
+            <tr><td>Attack</td><td>Jab combo (press repeatedly)</td></tr>
+            <tr><td>Side / Up / Down + Attack</td><td><b>Smash attacks</b>. Hold Attack to charge!</td></tr>
+            <tr><td>Attack while running</td><td>Dash attack</td></tr>
+            <tr><td>Attack in the air</td><td>Neutral, forward, back, up and down aerials (down spikes!)</td></tr>
+            <tr><td>Special (+ direction)</td><td>Four signature moves per form. <b>Up + Special</b> is your recovery.</td></tr>
+            <tr><td>Shield + Attack</td><td>Grab, then press a direction to throw</td></tr>
+            <tr><td>Shield + Left/Right/Down</td><td>Roll / spot dodge</td></tr>
+            <tr><td>Shield in the air</td><td>Air dodge (+ direction)</td></tr>
+            <tr><td>Down on a platform</td><td>Drop through</td></tr>
+            <tr><td>Down while falling</td><td>Fast fall</td></tr>
+            <tr><td>Shield just before landing when launched</td><td>Tech (recover instantly)</td></tr>
+          </table>
+          <p>Fly near a stage edge to <b>grab the ledge</b>; then jump, attack or press toward the stage to get up.</p>
+        </div>
+      </div>
+      <div class="row"><button class="btn primary" data-act="title">Got it!</button></div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="scr-results" class="screen">
+      <h2 id="results-title">Winner!</h2>
+      <div id="results-body" class="results"></div>
+      <p id="results-wait" class="hint hidden">Waiting for the host…</p>
+      <div class="row" id="results-buttons">
+        <button class="btn primary" data-act="rematch">Rematch</button>
+        <button class="btn" data-act="to-select">Character Select</button>
+        <button class="btn" data-act="quit">Main Menu</button>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="scr-pause" class="screen">
+      <h2>Paused</h2>
+      <div class="menu">
+        <button class="btn big primary" data-act="resume">Resume</button>
+        <button class="btn" data-act="help-ingame">Controls</button>
+        <button class="btn" data-act="quit">Quit Match</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="corner">
+    <button class="icon" id="btn-mute" title="Mute">🔊</button>
+    <button class="icon" id="btn-full" title="Fullscreen">⛶</button>
+  </div>
+  <div id="toast"></div>
+  <div id="ping"></div>
+
+  <script src="lib/peerjs.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
